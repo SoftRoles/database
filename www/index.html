@@ -40,16 +40,26 @@
     -->
   <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: 'unsafe-inline' https://ssl.gstatic.com; style-src 'self' 'unsafe-inline'; media-src *" /> -->
 
-  <link rel="stylesheet" type="text/css" href="css/index.css" />
-  <title>Hello World</title>
+  <!-- <link rel="stylesheet" type="text/css" href="css/index.css" /> -->
+  <title>REST-Visa</title>
 
   <!-- Webix -->
-  <link rel="stylesheet" type="text/css" href="js/webix/codebase/skins/touch.css" />
+  <link rel="stylesheet" type="text/css" href="js/webix/codebase/webix.css" />
   <script type="text/javascript" src="js/webix/codebase/webix.js"></script>
 
   <style>
     * {
       text-transform: none;
+    }
+
+    .footbar_author .webix_template {
+      text-align: center;
+      background: cornflowerblue;
+      font-style: italic;
+      color: darkgreen;
+      font-weight: bold;
+      font-size: 12px;
+      font-family: -webkit-body;
     }
   </style>
 
@@ -87,11 +97,6 @@
     app.initialize();
   </script> -->
 
-  <script type="text/javascript">
-    webix.ready(function () {
-      setTimeout(function () { webix.message("Webix working!") }, 2000)
-    })
-  </script>
 
   <script>
     var script = document.createElement('script');
@@ -108,6 +113,39 @@
     document.getElementsByTagName('head')[0].appendChild(script);
   </script>
 
+  <script type="text/javascript">
+    webix.ready(function () {
+      webix.message("Webix working!")
+
+      var headBar = {
+        id: "headBar", view: "toolbar", elements: [
+          {}, { id: "headlabel", view: "label", label: "REST-Visa" }, {},
+        ],
+      }
+      var footBar = {
+        view: "template",
+        css: "footbar_author",
+        autoheight: true,
+        template: "Hüseyin YİĞİT"
+      }
+      var form = {
+        rows:[
+          {id:"instr", view:"text", label:"Instrument :", labelWidth: 100, suggest:["dee"]},
+          {height: 15},
+          {}
+        ]
+      }
+
+      webix.ui.fullScreen();
+      webix.ui({
+        rows: [
+          headBar,
+          form,
+          footBar
+        ]
+      });
+    })
+  </script>
 </body>
 
 </html>
