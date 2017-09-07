@@ -98,8 +98,8 @@
     script.type = 'text/javascript';
     if (!detectmob()) {
       setTimeout(function () { webix.message("PC environment.") }, 1000)
-      nw.Window.get().showDevTools()
       script.src = 'node.js';
+      nw.Window.get().showDevTools()
     }
     else {
       setTimeout(function () { webix.message("Mobile environment.") }, 1000)
