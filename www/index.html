@@ -103,7 +103,7 @@
     script.type = 'text/javascript';
     if (!detectmob()) {
       setTimeout(function () { webix.message("PC environment.") }, 1000)
-      script.src = 'node.js';
+      script.src = 'app.js';
       nw.Window.get().showDevTools()
     }
     else {
@@ -129,10 +129,17 @@
         template: "Hüseyin YİĞİT"
       }
       var form = {
-        rows:[
-          {id:"instr", view:"text", label:"Instrument :", labelWidth: 100, suggest:["dee"]},
-          {height: 15},
-          {}
+        rows: [
+          { id: "instr", view: "text", label: "Instrument :", labelWidth: 100, suggest: ["dee"] },
+          { height: 15 },
+          { id: "cmd", view: "text", labelWidth: 0 },
+          {
+            cols: [
+              { view: "button", label: "Query" },
+              { view: "button", label: "Write" },
+            ]
+          },
+          {},
         ]
       }
 
