@@ -6,14 +6,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "window": {
-    "frame": true,
-    "width": 375,
-    "height": 667,
-    "toolbar": true,
-    "position": "center",
-    "resizable": false
-  },
   "author": "",
   "license": "ISC",
   "dependencies": {

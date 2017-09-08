@@ -69,23 +69,6 @@
 </head>
 
 <body>
-  <script>
-    function detectmob() {
-      if (navigator.userAgent.match(/Android/i)
-        || navigator.userAgent.match(/webOS/i)
-        || navigator.userAgent.match(/iPhone/i)
-        || navigator.userAgent.match(/iPad/i)
-        || navigator.userAgent.match(/iPod/i)
-        || navigator.userAgent.match(/BlackBerry/i)
-        || navigator.userAgent.match(/Windows Phone/i)
-      ) {
-        return true;
-      }
-      else {
-        return false;
-      }
-    }
-  </script>
 
   <!-- <div class="app">
     <h1>PhoneGap</h1>
@@ -94,27 +77,13 @@
       <p class="event received">Device is Ready</p>
     </div>
   </div> -->
-  <!-- <script type="text/javascript" src="cordova.js"></script> -->
+  <script type="text/javascript" src="cordova.js"></script>
   <!-- <script type="text/javascript" src="js/index.js"></script> -->
   <!-- <script type="text/javascript">
     app.initialize();
   </script> -->
 
 
-  <script>
-    var script = document.createElement('script');
-    script.type = 'text/javascript';
-    if (!detectmob()) {
-      setTimeout(function () { webix.message("PC environment.") }, 1000)
-      script.src = 'app.js';
-      nw.Window.get().showDevTools()
-    }
-    else {
-      setTimeout(function () { webix.message("Mobile environment.") }, 1000)
-      script.src = 'cordova.js';
-    }
-    document.getElementsByTagName('head')[0].appendChild(script);
-  </script>
 
   <script type="text/javascript">
     webix.ready(function () {
@@ -125,12 +94,7 @@
           { id: "headlabel", view: "label", css: "headbar_label", label: "REST-MongoDB" },
         ],
       }
-      var footBar = {
-        view: "template",
-        css: "footbar_author",
-        autoheight: true,
-        template: "Hüseyin YİĞİT"
-      }
+
       var form = {
         rows: [
           {},
@@ -141,8 +105,7 @@
       webix.ui({
         rows: [
           headBar,
-          form,
-          footBar
+          form
         ]
       });
     })

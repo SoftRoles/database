@@ -9,12 +9,12 @@ const app = express();
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cors())
-app.use(express.static(process.cwd() + "/public"))
+app.use(express.static(process.cwd() + "/www"))
 app.listen(5001, function () {
   console.log('REST-MongoDB server side is running at port 5001')
 })
 app.get("/", function (req, res) {
-  res.send("Hello world!")
+  res.sendFile("index.html")
 })
 
 var mongodb_url = "mongodb://localhost:27017"
