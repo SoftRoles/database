@@ -51,20 +51,6 @@
     * {
       text-transform: none;
     }
-
-    .footbar_author .webix_template {
-      text-align: center;
-      background: cornflowerblue;
-      font-style: italic;
-      color: darkgreen;
-      font-weight: bold;
-      font-size: 12px;
-      font-family: -webkit-body;
-    }
-
-    .headbar_label {
-      text-align: center;
-    }
   </style>
 </head>
 
@@ -87,11 +73,9 @@
 
   <script type="text/javascript">
     webix.ready(function () {
-      webix.message("Webix working!")
-
       var headBar = {
         id: "headBar", view: "toolbar", elements: [
-          { id: "headlabel", view: "label", css: "headbar_label", label: "REST-MongoDB" },
+          { id: "headlabel", view: "label", align: "center", label: "REST-MongoDB" },
         ],
       }
 
