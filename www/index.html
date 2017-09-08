@@ -41,7 +41,7 @@
   <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: 'unsafe-inline' https://ssl.gstatic.com; style-src 'self' 'unsafe-inline'; media-src *" /> -->
 
   <!-- <link rel="stylesheet" type="text/css" href="css/index.css" /> -->
-  <title>REST-Visa</title>
+  <title>REST-MongoDB</title>
 
   <!-- Webix -->
   <link rel="stylesheet" type="text/css" href="js/webix/codebase/webix.css" />
@@ -61,8 +61,11 @@
       font-size: 12px;
       font-family: -webkit-body;
     }
-  </style>
 
+    .headbar_label {
+      text-align: center;
+    }
+  </style>
 </head>
 
 <body>
@@ -119,7 +122,7 @@
 
       var headBar = {
         id: "headBar", view: "toolbar", elements: [
-          {}, { id: "headlabel", view: "label", label: "REST-Visa" }, {},
+          { id: "headlabel", view: "label", css: "headbar_label", label: "REST-MongoDB" },
         ],
       }
       var footBar = {
@@ -130,15 +133,6 @@
       }
       var form = {
         rows: [
-          { id: "instr", view: "text", label: "Instrument :", labelWidth: 100, suggest: ["dee"] },
-          { height: 15 },
-          { id: "cmd", view: "text", labelWidth: 0 },
-          {
-            cols: [
-              { view: "button", label: "Query" },
-              { view: "button", label: "Write" },
-            ]
-          },
           {},
         ]
       }
