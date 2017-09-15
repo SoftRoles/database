@@ -1,1 +1,0 @@
-"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --profile-directory="Default" --app="data:text/html,<html><body><script>window.moveTo(0,0);window.resizeTo(375,667);window.location='http://127.0.0.1:5001/';</script></body></html>"
