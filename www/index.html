@@ -43,6 +43,9 @@
   <!-- <link rel="stylesheet" type="text/css" href="css/index.css" /> -->
   <title>REST-MongoDB</title>
 
+  <!-- async -->
+  <script type="text/javascript" src="js/async/dist/async.js"></script>
+
   <!-- Webix -->
   <link rel="stylesheet" type="text/css" href="js/webix/codebase/webix.css" />
   <script type="text/javascript" src="js/webix/codebase/webix.js"></script>
@@ -81,7 +84,31 @@
 
       var form = {
         rows: [
-          {},
+          { id: "restip", view: "text", label: "IP", labelWidth: 100, value: "127.0.0.1", suggest: ["127.0.0.1", "192.168.2.8"] },
+          {
+            id: "tree", view: "tree", select: true, data: [{ id: "1", value: "test", data: [{ value: "testsub" }] }], gravity: 1,
+            on: {
+              "onSelectChange": function (id) {
+                if (this.getSelectedItem().$level === 2) {
+                  var col = this.getSelectedItem().value
+                  var db = this.getItem(this.getSelectedItem().$parent).value
+                  webix.ajax().get("http://" + $$("restip").getValue() + ":5001/mongodb/" + db + "/" + col, function (t, d, x) {
+                    console.log(d.json())
+                    // async.eachSeries(d.json(),
+                    //   function (item, callback) {
+                    //     data[data.length - 1].data.push({ value: item.name })
+                    //     callback()
+                    //   },
+                    //   function (err) {
+                    //     callback()
+                    //   })
+                  })
+                }
+
+              }
+            }
+          },
+          { gravity: 1 },
         ]
       }
 
@@ -92,6 +119,29 @@
           form
         ]
       });
+
+      webix.ajax().get("http://" + $$("restip").getValue() + ":5001/mongodb", function (t, d, x) {
+        var data = []
+        async.eachSeries(d.json().databases,
+          function (item, callback) {
+            data.push({ value: item.name, data: [] })
+            webix.ajax().get("http://" + $$("restip").getValue() + ":5001/mongodb/" + item.name, function (t, d, x) {
+              async.eachSeries(d.json(),
+                function (item, callback) {
+                  data[data.length - 1].data.push({ value: item.name })
+                  callback()
+                },
+                function (err) {
+                  callback()
+                })
+            })
+          },
+          function (err) {
+            $$("tree").unselectAll()
+            $$("tree").clearAll()
+            $$("tree").parse(data)
+          })
+      })
     })
   </script>
 </body>
