@@ -41,14 +41,13 @@
   <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: 'unsafe-inline' https://ssl.gstatic.com; style-src 'self' 'unsafe-inline'; media-src *" /> -->
 
   <!-- <link rel="stylesheet" type="text/css" href="css/index.css" /> -->
-  <title>REST-MongoDB</title>
+  <title>3005-mongodb</title>
 
   <!-- async -->
-  <script type="text/javascript" src="js/async/dist/async.js"></script>
+  <script type="text/javascript" src="bower_components/async/dist/async.js"></script>
 
-  <!-- Webix -->
-  <link rel="stylesheet" type="text/css" href="js/webix/codebase/webix.css" />
-  <script type="text/javascript" src="js/webix/codebase/webix.js"></script>
+  <link rel="stylesheet" href="bower_components/webix/codebase/webix.css" type="text/css">
+  <script src="bower_components/webix/codebase/webix.js"></script>
 
   <style>
     * {
@@ -59,40 +58,25 @@
 
 <body>
 
-  <!-- <div class="app">
-    <h1>PhoneGap</h1>
-    <div id="deviceready" class="blink">
-      <p class="event listening">Connecting to Device</p>
-      <p class="event received">Device is Ready</p>
-    </div>
-  </div> -->
-  <script type="text/javascript" src="cordova.js"></script>
-  <!-- <script type="text/javascript" src="js/index.js"></script> -->
-  <!-- <script type="text/javascript">
-    app.initialize();
-  </script> -->
-
-
 
   <script type="text/javascript">
     webix.ready(function () {
       var headBar = {
         id: "headBar", view: "toolbar", elements: [
-          { id: "headlabel", view: "label", align: "center", label: "REST-MongoDB" },
+          { id: "headlabel", view: "label", align: "center", label: "Usage: GET/POST/PUT/DEL /mongodb/<col>/<id>" },
         ],
       }
 
       var form = {
         rows: [
-          { id: "restip", view: "text", label: "IP", labelWidth: 100, value: "127.0.0.1", suggest: ["127.0.0.1", "192.168.2.8"] },
           {
-            id: "tree", view: "tree", select: true, data: [{ id: "1", value: "test", data: [{ value: "testsub" }] }], gravity: 1,
+            id: "tree", view: "tree", select: true, data: [], gravity: 1,
             on: {
               "onSelectChange": function (id) {
                 if (this.getSelectedItem().$level === 2) {
                   var col = this.getSelectedItem().value
                   var db = this.getItem(this.getSelectedItem().$parent).value
-                  webix.ajax().get("http://" + $$("restip").getValue() + ":5001/mongodb/" + db + "/" + col, function (t, d, x) {
+                  webix.ajax().get("/mongodb/" + db + "/" + col, function (t, d, x) {
                     console.log(d.json())
                     // async.eachSeries(d.json(),
                     //   function (item, callback) {
@@ -120,12 +104,12 @@
         ]
       });
 
-      webix.ajax().get("http://" + $$("restip").getValue() + ":5001/mongodb", function (t, d, x) {
+      webix.ajax().get("/mongodb", function (t, d, x) {
         var data = []
         async.eachSeries(d.json().databases,
           function (item, callback) {
             data.push({ value: item.name, data: [] })
-            webix.ajax().get("http://" + $$("restip").getValue() + ":5001/mongodb/" + item.name, function (t, d, x) {
+            webix.ajax().get("/mongodb/" + item.name, function (t, d, x) {
               async.eachSeries(d.json(),
                 function (item, callback) {
                   data[data.length - 1].data.push({ value: item.name })

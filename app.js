@@ -9,15 +9,13 @@ const app = express();
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cors())
-app.use(express.static(__dirname + "/www"))
-app.listen(5001, function () {
-  console.log('REST-MongoDB server side is running at port 5001')
-})
-app.get("/", function (req, res) {
-  res.sendFile("index.html")
+app.use(express.static(__dirname + "/test"))
+app.listen(3005, function () {
+  console.log("Service running on http://127.0.0.1:3005")
 })
 
 var mongodb_url = "mongodb://localhost:27017"
+
 app.get("/mongodb", function (req, res) {
   MongoClient.connect(mongodb_url + "/test", function (err, db) {
     var adminDb = db.admin();
