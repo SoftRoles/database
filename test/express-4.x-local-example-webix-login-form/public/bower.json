@@ -1,0 +1,18 @@
+{
+  "name": "public",
+  "homepage": "https://github.com/passport/express-4.x-local-example",
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "webix": "^5.2.0",
+    "async": "^2.6.0"
+  }
+}
