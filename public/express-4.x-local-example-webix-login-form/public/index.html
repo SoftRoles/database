@@ -58,14 +58,18 @@
 
 <body>
 
-
+  <!-- <a href="/logout">Log out</a> -->
   <script type="text/javascript">
+
+    var token = ""
+
     webix.ready(function () {
       var headBar = {
         id: "headBar", view: "toolbar", elements: [
           { id: "headlabel", view: "label", align: "center", label: "Usage: GET/POST/PUT/DEL /mongodb/<col>/<id>" },
         ],
       }
+
 
       var form = {
         rows: [
@@ -76,7 +80,7 @@
                 if (this.getSelectedItem().$level === 2) {
                   var col = this.getSelectedItem().value
                   var db = this.getItem(this.getSelectedItem().$parent).value
-                  webix.ajax().get("/mongodb/" + db + "/" + col, function (t, d, x) {
+                  webix.ajax().headers({ "Authorization": "Bearer " + token }).get("/" + db + "/" + col, function (t, d, x) {
                     console.log(d.json())
                     // async.eachSeries(d.json(),
                     //   function (item, callback) {
@@ -92,7 +96,8 @@
               }
             }
           },
-          { gravity: 1 },
+          // { gravity: 1 },
+          { view: "button", label: "Logout", click: function () { window.location.href = "/logout" } }
         ]
       }
 
@@ -104,28 +109,32 @@
         ]
       });
 
-      webix.ajax().get("/mongodb", function (t, d, x) {
-        var data = []
-        async.eachSeries(d.json().databases,
-          function (item, callback) {
-            data.push({ value: item.name, data: [] })
-            webix.ajax().get("/mongodb/" + item.name, function (t, d, x) {
-              async.eachSeries(d.json(),
-                function (item, callback) {
-                  data[data.length - 1].data.push({ value: item.name })
-                  callback()
-                },
-                function (err) {
-                  callback()
-                })
+      webix.ajax().get("/bearer", function (t, d, x) {
+        token = d.json().token
+        webix.ajax().headers({ "Authorization": "Bearer " + token }).get("/", function (t, d, x) {
+          var data = []
+          async.eachSeries(d.json(),
+            function (item, callback) {
+              data.push({ value: item.name, data: [] })
+              webix.ajax().headers({ "Authorization": "Bearer " + token }).get("/" + item.name, function (t, d, x) {
+                async.eachSeries(d.json(),
+                  function (item, callback) {
+                    data[data.length - 1].data.push({ value: item.name })
+                    callback()
+                  },
+                  function (err) {
+                    callback()
+                  })
+              })
+            },
+            function (err) {
+              $$("tree").unselectAll()
+              $$("tree").clearAll()
+              $$("tree").parse(data)
             })
-          },
-          function (err) {
-            $$("tree").unselectAll()
-            $$("tree").clearAll()
-            $$("tree").parse(data)
-          })
+        })
       })
+
     })
   </script>
 </body>
