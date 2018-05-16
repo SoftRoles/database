@@ -100,8 +100,7 @@ app.get('/mongodb/login', function (req, res) {
   res.sendFile(__dirname + '/public/login.html');
 });
 
-app.post('/mongodb/login', passport.authenticate('local', { failureRedirect: '/mongodb/login', successRedirect: '/mongodb/admin' }),
-  function (req, res) {
+app.post('/mongodb/login', passport.authenticate('local', { failureRedirect: '/mongodb/login', successRedirect: '/mongodb/admin' }), function (req, res) {
     res.redirect('/mongodb/admin');
   });
 
@@ -113,7 +112,8 @@ app.get('/mongodb/logout', function (req, res) {
 
 app.get('/mongodb/admin', require('connect-ensure-login').ensureLoggedIn({ redirectTo: "/mongodb/login" }), function (req, res) {
   // console.log(req.headers)
-  res.sendFile(__dirname + '/public/index.html');
+  if (req.user.username == "admin") res.sendFile(__dirname + '/public/index.html')
+  else res.send(403);
 });
 
 app.get('/mongodb/bearer', require('connect-ensure-login').ensureLoggedIn(), function (req, res) {
@@ -140,7 +140,7 @@ app.get("/mongodb/api", passport.authenticate('bearer', { session: false }), fun
     adminDb.listDatabases(function (err, dbs) {
       // console.log(dbs)
       if (req.user.username == "admin") res.send(dbs.databases)
-      else res.send(dbs.databases.filter(function (item) { return item.name == req.user.username }))
+      else res.send([])
       db.close()
     })
   })
