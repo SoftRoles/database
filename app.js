@@ -18,7 +18,8 @@ var app = express();
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cors())
-app.use("/bower_components", express.static(__dirname + "/public/bower_components"))
+// app.use("/bower_components", express.static(__dirname + "/public/bower_components"))
+app.use("/mongodb/bower_components", express.static(__dirname + "/public/bower_components"))
 
 //==================================================================================================
 // Bearer Passport
@@ -95,27 +96,27 @@ app.use(require('express-session')({ secret: 'keyboard cat', resave: false, save
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get('/login',
+app.get('/mongodb/login', function (req, res) {
+  res.sendFile(__dirname + '/public/login.html');
+});
+
+app.post('/mongodb/login', passport.authenticate('local', { failureRedirect: '/mongodb/login', successRedirect: '/mongodb/admin' }),
   function (req, res) {
-    res.sendFile(__dirname + '/public/login.html');
+    res.redirect('/mongodb/admin');
   });
 
-app.post('/login', passport.authenticate('local', { failureRedirect: '/login', successRedirect: '/admin' }),
-  function (req, res) {
-    res.redirect('/admin');
-  });
-
-app.get('/logout', function (req, res) {
+app.get('/mongodb/logout', function (req, res) {
   req.logout();
-  res.redirect('/admin');
+  res.redirect('/mongodb/admin');
 });
 
 
-app.get('/admin', require('connect-ensure-login').ensureLoggedIn(), function (req, res) {
+app.get('/mongodb/admin', require('connect-ensure-login').ensureLoggedIn({ redirectTo: "/mongodb/login" }), function (req, res) {
+  // console.log(req.headers)
   res.sendFile(__dirname + '/public/index.html');
 });
 
-app.get('/bearer', require('connect-ensure-login').ensureLoggedIn(), function (req, res) {
+app.get('/mongodb/bearer', require('connect-ensure-login').ensureLoggedIn(), function (req, res) {
   // console.log("[3005-mongodb]: /bearer", req.user)
   MongoClient.connect(mongodb_url + "/auth", function (err, db) {
     db.collection("users").findOne({ token: req.user.token }, function (err, user) {
@@ -132,7 +133,7 @@ app.get('/bearer', require('connect-ensure-login').ensureLoggedIn(), function (r
 //==================================================================================================
 var mongodb_url = "mongodb://localhost:27017"
 
-app.get("/", passport.authenticate('bearer', { session: false }), function (req, res) {
+app.get("/mongodb/api", passport.authenticate('bearer', { session: false }), function (req, res) {
   // console.log(req.user)
   MongoClient.connect(mongodb_url + "/test", function (err, db) {
     var adminDb = db.admin();
@@ -145,7 +146,7 @@ app.get("/", passport.authenticate('bearer', { session: false }), function (req,
   })
 })
 
-app.get("/:db", passport.authenticate('bearer', { session: false }), function (req, res) {
+app.get("/mongodb/api/:db", passport.authenticate('bearer', { session: false }), function (req, res) {
   MongoClient.connect(mongodb_url + "/" + req.params.db, function (err, db) {
     db.listCollections().toArray(function (err, items) {
       res.send(items)
@@ -154,7 +155,7 @@ app.get("/:db", passport.authenticate('bearer', { session: false }), function (r
   })
 })
 
-app.post("/:db/:col", passport.authenticate('bearer', { session: false }), function (req, res) {
+app.post("/mongodb/api/:db/:col", passport.authenticate('bearer', { session: false }), function (req, res) {
   MongoClient.connect(mongodb_url + "/" + req.params.db, function (err, db) {
     db.collection(req.params.col).insertOne(req.body, function (err, r) {
       if (err) res.send({ error: err })
@@ -164,7 +165,7 @@ app.post("/:db/:col", passport.authenticate('bearer', { session: false }), funct
   });
 })
 
-app.get("/:db/:col", passport.authenticate('bearer', { session: false }), function (req, res) {
+app.get("/mongodb/api/:db/:col", passport.authenticate('bearer', { session: false }), function (req, res) {
   MongoClient.connect(mongodb_url + "/" + req.params.db, function (err, db) {
     db.collection(req.params.col).find(req.query).toArray(function (err, docs) {
       if (err) res.send({ error: err })
@@ -177,7 +178,7 @@ app.get("/:db/:col", passport.authenticate('bearer', { session: false }), functi
   });
 })
 
-app.put("/:db/:col/:id", passport.authenticate('bearer', { session: false }), function (req, res) {
+app.put("/mongodb/api/:db/:col/:id", passport.authenticate('bearer', { session: false }), function (req, res) {
   console.log(req)
   MongoClient.connect(mongodb_url + "/" + req.params.db, function (err, db) {
     db.collection(req.params.col).updateOne({ _id: MongoObjectID(req.params.id) }, req.body, function (err, item) {
@@ -188,7 +189,7 @@ app.put("/:db/:col/:id", passport.authenticate('bearer', { session: false }), fu
   });
 })
 
-app.delete("/:db/:col/:id", passport.authenticate('bearer', { session: false }), function (req, res) {
+app.delete("/mongodb/api/:db/:col/:id", passport.authenticate('bearer', { session: false }), function (req, res) {
   MongoClient.connect(mongodb_url + "/" + req.params.db, function (err, db) {
     db.collection(req.params.col).deleteOne({ _id: MongoObjectID(req.params.id) }, function (err, r) {
       if (err) res.send({ error: err })

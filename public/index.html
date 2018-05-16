@@ -80,7 +80,7 @@
                 if (this.getSelectedItem().$level === 2) {
                   var col = this.getSelectedItem().value
                   var db = this.getItem(this.getSelectedItem().$parent).value
-                  webix.ajax().headers({ "Authorization": "Bearer " + token }).get("/" + db + "/" + col, function (t, d, x) {
+                  webix.ajax().headers({ "Authorization": "Bearer " + token }).get("/mongodb/api/" + db + "/" + col, function (t, d, x) {
                     console.log(d.json())
                     // async.eachSeries(d.json(),
                     //   function (item, callback) {
@@ -97,7 +97,7 @@
             }
           },
           // { gravity: 1 },
-          { view: "button", label: "Logout", click: function () { window.location.href = "/logout" } }
+          { view: "button", label: "Logout", click: function () { window.location.href = "/mongodb/logout" } }
         ]
       }
 
@@ -109,14 +109,14 @@
         ]
       });
 
-      webix.ajax().get("/bearer", function (t, d, x) {
+      webix.ajax().get("/mongodb/bearer", function (t, d, x) {
         token = d.json().token
-        webix.ajax().headers({ "Authorization": "Bearer " + token }).get("/", function (t, d, x) {
+        webix.ajax().headers({ "Authorization": "Bearer " + token }).get("/mongodb/api", function (t, d, x) {
           var data = []
           async.eachSeries(d.json(),
             function (item, callback) {
               data.push({ value: item.name, data: [] })
-              webix.ajax().headers({ "Authorization": "Bearer " + token }).get("/" + item.name, function (t, d, x) {
+              webix.ajax().headers({ "Authorization": "Bearer " + token }).get("/mongodb/api/" + item.name, function (t, d, x) {
                 async.eachSeries(d.json(),
                   function (item, callback) {
                     data[data.length - 1].data.push({ value: item.name })

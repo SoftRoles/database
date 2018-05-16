@@ -33,7 +33,7 @@
           margin: 5, cols: [
             {
               view: "button", label: "Login", type: "form", click: function () {
-                webix.send("/login", $$("form").getValues())
+                webix.send("/mongodb/login", $$("form").getValues())
               }
             }
           ]
@@ -41,7 +41,7 @@
       ],
       on: {
         "onSubmit": function () {
-          webix.send("/login", $$("form").getValues())
+          webix.send("/mongodb/login", $$("form").getValues())
         }
       }
     });
