@@ -13,7 +13,6 @@
     "connect-ensure-login": "^0.1.1",
     "cookie-parser": "^1.4.3",
     "cors": "^2.8.4",
-    "ejs": "^2.6.1",
     "express": "^4.15.4",
     "express-session": "^1.15.6",
     "mongodb": "^2.2.31",
