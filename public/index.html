@@ -109,7 +109,7 @@
         ]
       });
 
-      webix.ajax().get("/mongodb/bearer", function (t, d, x) {
+      webix.ajax().get("/mongodb/user", function (t, d, x) {
         token = d.json().token
         webix.ajax().headers({ "Authorization": "Bearer " + token }).get("/mongodb/api", function (t, d, x) {
           var data = []
