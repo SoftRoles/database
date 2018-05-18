@@ -113,7 +113,7 @@ app.get('/mongodb/logout', function (req, res) {
 app.get('/mongodb', require('connect-ensure-login').ensureLoggedIn({ redirectTo: "/mongodb/login" }), function (req, res) {
   // console.log(req.headers)
   if (req.user.username == "admin") res.sendFile(__dirname + '/public/index.html')
-  else res.send(403);
+  else { req.logout(); res.send(403); }
 });
 
 app.get('/mongodb/user', require('connect-ensure-login').ensureLoggedIn(), function (req, res) {
