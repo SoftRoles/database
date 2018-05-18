@@ -18,7 +18,7 @@ var app = express();
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cors())
-// app.use("/bower_components", express.static(__dirname + "/public/bower_components"))
+app.use("/bower_components", express.static(__dirname + "/public/bower_components"))
 app.use("/mongodb/bower_components", express.static(__dirname + "/public/bower_components"))
 
 //==================================================================================================
@@ -100,17 +100,17 @@ app.get('/mongodb/login', function (req, res) {
   res.sendFile(__dirname + '/public/login.html');
 });
 
-app.post('/mongodb/login', passport.authenticate('local', { failureRedirect: '/mongodb/login', successRedirect: '/mongodb/admin' }), function (req, res) {
-    res.redirect('/mongodb/admin');
+app.post('/mongodb/login', passport.authenticate('local', { failureRedirect: '/mongodb/login', successRedirect: '/mongodb' }), function (req, res) {
+    res.redirect('/mongodb');
   });
 
 app.get('/mongodb/logout', function (req, res) {
   req.logout();
-  res.redirect('/mongodb/admin');
+  res.redirect('/mongodb');
 });
 
 
-app.get('/mongodb/admin', require('connect-ensure-login').ensureLoggedIn({ redirectTo: "/mongodb/login" }), function (req, res) {
+app.get('/mongodb', require('connect-ensure-login').ensureLoggedIn({ redirectTo: "/mongodb/login" }), function (req, res) {
   // console.log(req.headers)
   if (req.user.username == "admin") res.sendFile(__dirname + '/public/index.html')
   else res.send(403);
