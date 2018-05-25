@@ -46,12 +46,10 @@ passport.use(new passStrategyBearer(function (token, cb) {
 // that the password is correct and then invoke `cb` with a user object, which
 // will be set at `req.user` in route handlers after authentication.
 passport.use(new passStrategyLocal(function (username, password, cb) {
-  // console.log("[3005-mongodb]: passport.use", username, password)
   MongoClient.connect(mongodb_url + "/auth", function (err, db) {
-    db.collection("users").findOne({ username: username }, function (err, user) {
+    db.collection("users").findOne({ username: username, password:password }, function (err, user) {
       if (err) return cb(err)
       if (!user) { return cb(null, false); }
-      if (user.password != password) { return cb(null, false); }
       return cb(null, user);
       db.close();
     });
@@ -72,7 +70,6 @@ passport.serializeUser(function (user, cb) {
 });
 
 passport.deserializeUser(function (username, cb) {
-  // console.log("[3005-mongodb]: passport.deserializeUser", username)
   MongoClient.connect(mongodb_url + "/auth", function (err, db) {
     db.collection("users").findOne({ username: username }, function (err, user) {
       if (err) return cb(err)
