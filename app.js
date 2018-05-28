@@ -126,7 +126,7 @@ app.get('/mongodb/user', require('connect-ensure-login').ensureLoggedIn(), funct
 //==================================================================================================
 // MongoDB
 //==================================================================================================
-var mongodb_url = "mongodb://localhost:27017"
+var mongodb_url = "mongodb://127.0.0.1:27017"
 
 app.get("/mongodb/api", passport.authenticate('bearer', { session: false }), function (req, res) {
   // console.log(req.user)
