@@ -1,23 +1,51 @@
 var express = require('express');
-var bodyParser = require("body-parser")
-var cors = require("cors")
 
 var passport = require('passport');
 var passStrategyLocal = require('passport-local').Strategy;
 var passStrategyBearer = require('passport-http-bearer').Strategy;
 
+var session = require('express-session');
+var mongodbSessionStore = require('connect-mongodb-session')(session);
+
 
 // Module related packages
 var MongoClient = require("mongodb").MongoClient
 var MongoObjectID = require('mongodb').ObjectID;
-
+var mongodb_url = "mongodb://127.0.0.1:27017"
 
 // Create a new Express application.
 var app = express();
 
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
-app.use(cors())
+var store = new mongodbSessionStore(
+  {
+    uri: 'mongodb://127.0.0.1:27017/auth',
+    databaseName: 'auth',
+    collection: 'sessions'
+  });
+
+// Catch errors
+store.on('error', function (error) {
+  assert.ifError(error);
+  assert.ok(false);
+});
+
+app.use(require('express-session')({
+  secret: 'This is a secret',
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
+  },
+  store: store,
+  // Boilerplate options, see:
+  // * https://www.npmjs.com/package/express-session#resave
+  // * https://www.npmjs.com/package/express-session#saveuninitialized
+  resave: true,
+  saveUninitialized: true
+}));
+
+app.use(require('morgan')('tiny'));
+app.use(require('body-parser').json())
+app.use(require('body-parser').urlencoded({ extended: true }));
+app.use(require("cors")())
 app.use("/bower_components", express.static(__dirname + "/public/bower_components"))
 app.use("/mongodb/bower_components", express.static(__dirname + "/public/bower_components"))
 
@@ -36,32 +64,6 @@ passport.use(new passStrategyBearer(function (token, cb) {
 }));
 
 
-//==================================================================================================
-// Local Passport
-//==================================================================================================
-// Configure the local strategy for use by Passport.
-//
-// The local strategy require a `verify` function which receives the credentials
-// (`username` and `password`) submitted by the user.  The function must verify
-// that the password is correct and then invoke `cb` with a user object, which
-// will be set at `req.user` in route handlers after authentication.
-passport.use(new passStrategyLocal(function (username, password, cb) {
-  MongoClient.connect(mongodb_url + "/auth", function (err, db) {
-    db.collection("users").findOne({ username: username, password:password }, function (err, user) {
-      if (err) return cb(err)
-      if (!user) { return cb(null, false); }
-      return cb(null, user);
-      db.close();
-    });
-  });
-}));
-
-
-// Configure Passport authenticated session persistence.
-//
-// In order to restore authentication state across HTTP requests, Passport needs
-// to serialize users into and deserialize users out of the session.  The
-// typical implementation of this is as simple as supplying the user ID when
 // serializing, and querying the user record by ID from the database when
 // deserializing.
 passport.serializeUser(function (user, cb) {
@@ -80,35 +82,12 @@ passport.deserializeUser(function (username, cb) {
   });
 });
 
-
-// Use application-level middleware for common functionality, including
-// logging, parsing, and session handling.
-app.use(require('morgan')('combined'));
-app.use(require('cookie-parser')());
-app.use(require('body-parser').urlencoded({ extended: true }));
-app.use(require('express-session')({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
-
 // Initialize Passport and restore authentication state, if any, from the
 // session.
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get('/mongodb/login', function (req, res) {
-  res.sendFile(__dirname + '/public/login.html');
-});
-
-app.post('/mongodb/login', passport.authenticate('local', { failureRedirect: '/mongodb/login', successRedirect: '/mongodb' }), function (req, res) {
-    res.redirect('/mongodb');
-  });
-
-app.get('/mongodb/logout', function (req, res) {
-  req.logout();
-  res.redirect('/mongodb');
-});
-
-
-app.get('/mongodb', require('connect-ensure-login').ensureLoggedIn({ redirectTo: "/mongodb/login" }), function (req, res) {
-  // console.log(req.headers)
+app.get('/mongodb', require('connect-ensure-login').ensureLoggedIn({ redirectTo: "/login?source=mongodb" }), function (req, res) {
   if (req.user.username == "admin") res.sendFile(__dirname + '/public/index.html')
   else { req.logout(); res.send(403); }
 });
@@ -126,7 +105,7 @@ app.get('/mongodb/user', require('connect-ensure-login').ensureLoggedIn(), funct
 //==================================================================================================
 // MongoDB
 //==================================================================================================
-var mongodb_url = "mongodb://127.0.0.1:27017"
+
 
 app.get("/mongodb/api", passport.authenticate('bearer', { session: false }), function (req, res) {
   // console.log(req.user)
