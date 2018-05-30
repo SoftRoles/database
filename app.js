@@ -1,27 +1,24 @@
 var express = require('express');
 
 var passport = require('passport');
-var passStrategyLocal = require('passport-local').Strategy;
 var passStrategyBearer = require('passport-http-bearer').Strategy;
 
 var session = require('express-session');
 var mongodbSessionStore = require('connect-mongodb-session')(session);
 
-
 // Module related packages
-var MongoClient = require("mongodb").MongoClient
-var MongoObjectID = require('mongodb').ObjectID;
-var mongodb_url = "mongodb://127.0.0.1:27017"
+var mongoClient = require("mongodb").MongoClient
+var mongoObjectId = require('mongodb').ObjectID;
+var mongodbUrl = "mongodb://127.0.0.1:27017"
 
 // Create a new Express application.
 var app = express();
 
-var store = new mongodbSessionStore(
-  {
-    uri: 'mongodb://127.0.0.1:27017/auth',
-    databaseName: 'auth',
-    collection: 'sessions'
-  });
+var store = new mongodbSessionStore({
+  uri: mongodbUrl,
+  databaseName: 'auth',
+  collection: 'sessions'
+});
 
 // Catch errors
 store.on('error', function (error) {
@@ -46,14 +43,13 @@ app.use(require('morgan')('tiny'));
 app.use(require('body-parser').json())
 app.use(require('body-parser').urlencoded({ extended: true }));
 app.use(require("cors")())
-app.use("/bower_components", express.static(__dirname + "/public/bower_components"))
 app.use("/mongodb/bower_components", express.static(__dirname + "/public/bower_components"))
 
 //==================================================================================================
 // Bearer Passport
 //==================================================================================================
 passport.use(new passStrategyBearer(function (token, cb) {
-  MongoClient.connect(mongodb_url + "/auth", function (err, db) {
+  mongoClient.connect(mongodbUrl + "/auth", function (err, db) {
     db.collection("users").findOne({ token: token }, function (err, user) {
       if (err) return cb(err)
       if (!user) { return cb(null, false); }
@@ -63,16 +59,19 @@ passport.use(new passStrategyBearer(function (token, cb) {
   });
 }));
 
-
+// Configure Passport authenticated session persistence.
+//
+// In order to restore authentication state across HTTP requests, Passport needs
+// to serialize users into and deserialize users out of the session.  The
+// typical implementation of this is as simple as supplying the user ID when
 // serializing, and querying the user record by ID from the database when
 // deserializing.
 passport.serializeUser(function (user, cb) {
-  // console.log("[3005-mongodb]: passport.serializeUser", user)
   cb(null, user.username);
 });
 
 passport.deserializeUser(function (username, cb) {
-  MongoClient.connect(mongodb_url + "/auth", function (err, db) {
+  mongoClient.connect(mongodbUrl + "/auth", function (err, db) {
     db.collection("users").findOne({ username: username }, function (err, user) {
       if (err) return cb(err)
       if (!user) { return cb(null, false); }
@@ -92,27 +91,14 @@ app.get('/mongodb', require('connect-ensure-login').ensureLoggedIn({ redirectTo:
   else { req.logout(); res.send(403); }
 });
 
-app.get('/mongodb/user', require('connect-ensure-login').ensureLoggedIn(), function (req, res) {
-  MongoClient.connect(mongodb_url + "/auth", function (err, db) {
-    db.collection("users").findOne({ token: req.user.token }, function (err, user) {
-      if (err) res.send(err)
-      else res.send(user)
-      db.close();
-    });
-  });
-});
 
 //==================================================================================================
-// MongoDB
+// API
 //==================================================================================================
-
-
 app.get("/mongodb/api", passport.authenticate('bearer', { session: false }), function (req, res) {
-  // console.log(req.user)
-  MongoClient.connect(mongodb_url + "/test", function (err, db) {
+  mongoClient.connect(mongodbUrl + "/test", function (err, db) {
     var adminDb = db.admin();
     adminDb.listDatabases(function (err, dbs) {
-      // console.log(dbs)
       if (req.user.username == "admin") res.send(dbs.databases)
       else res.send([])
       db.close()
@@ -121,9 +107,9 @@ app.get("/mongodb/api", passport.authenticate('bearer', { session: false }), fun
 })
 
 app.get("/mongodb/api/:db", passport.authenticate('bearer', { session: false }), function (req, res) {
-  MongoClient.connect(mongodb_url + "/" + req.params.db, function (err, db) {
+  mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
     db.listCollections().toArray(function (err, items) {
-      if (req.user.username == "admin")  res.send(items)
+      if (req.user.username == "admin") res.send(items)
       else res.send([])
       db.close()
     })
@@ -131,7 +117,7 @@ app.get("/mongodb/api/:db", passport.authenticate('bearer', { session: false }),
 })
 
 app.post("/mongodb/api/:db/:col", passport.authenticate('bearer', { session: false }), function (req, res) {
-  MongoClient.connect(mongodb_url + "/" + req.params.db, function (err, db) {
+  mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
     req.body.username = req.user.username
     db.collection(req.params.col).insertOne(req.body, function (err, r) {
       if (err) res.send({ error: err })
@@ -142,8 +128,8 @@ app.post("/mongodb/api/:db/:col", passport.authenticate('bearer', { session: fal
 })
 
 app.get("/mongodb/api/:db/:col", passport.authenticate('bearer', { session: false }), function (req, res) {
-  if(req.user.username != "admin") req.query.username = req.user.username
-  MongoClient.connect(mongodb_url + "/" + req.params.db, function (err, db) {
+  if (req.user.username != "admin") req.query.username = req.user.username
+  mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
     db.collection(req.params.col).find(req.query).toArray(function (err, docs) {
       if (err) res.send({ error: err })
       else {
@@ -156,8 +142,8 @@ app.get("/mongodb/api/:db/:col", passport.authenticate('bearer', { session: fals
 })
 
 app.put("/mongodb/api/:db/:col/:id", passport.authenticate('bearer', { session: false }), function (req, res) {
-  MongoClient.connect(mongodb_url + "/" + req.params.db, function (err, db) {
-    db.collection(req.params.col).updateOne({ _id: MongoObjectID(req.params.id) }, req.body, function (err, item) {
+  mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
+    db.collection(req.params.col).updateOne({ _id: mongoObjectId(req.params.id) }, req.body, function (err, item) {
       if (err) res.send({ error: err })
       else res.send(item)
       db.close()
@@ -166,8 +152,8 @@ app.put("/mongodb/api/:db/:col/:id", passport.authenticate('bearer', { session: 
 })
 
 app.delete("/mongodb/api/:db/:col/:id", passport.authenticate('bearer', { session: false }), function (req, res) {
-  MongoClient.connect(mongodb_url + "/" + req.params.db, function (err, db) {
-    db.collection(req.params.col).deleteOne({ _id: MongoObjectID(req.params.id) }, function (err, r) {
+  mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
+    db.collection(req.params.col).deleteOne({ _id: mongoObjectId(req.params.id) }, function (err, r) {
       if (err) res.send({ error: err })
       else res.send(r)
       db.close()
