@@ -146,10 +146,8 @@ app.post("/mongodb/api/:db/:col", passport.authenticate('bearer', { session: fal
 })
 
 app.get("/mongodb/api/:db/:col/:id", passport.authenticate('bearer', { session: false }), function (req, res) {
-    req.query.users = req.user.username
-    req.query._id = mongoObjectId(req.params.id)
     mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
-        db.collection(req.params.col).findOne(req.query, function (err, doc) {
+        db.collection(req.params.col).findOne({ _id: mongoObjectId(req.params.id), users: req.user.username }, function (err, doc) {
             if (err) res.send({ error: err })
             else {
                 doc.id = doc._id; delete doc._id;
