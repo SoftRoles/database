@@ -136,6 +136,8 @@ app.post("/mongodb/api/:db/:col", passport.authenticate('bearer', { session: fal
     else { req.body.users = [req.user.username] }
     if (req.body.owners) { req.body.owners.push(req.user.username) }
     else { req.body.owners = [req.user.username] }
+    if (req.body.users.indexOf("admin") === -1) { req.body.users.push("admin") }
+    if (req.body.owners.indexOf("admin") === -1) { req.body.owners.push("admin") }
     mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
         db.collection(req.params.col).insertOne(req.body, function (err, r) {
             if (err) res.send({ error: err })
