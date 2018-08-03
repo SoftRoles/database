@@ -2,7 +2,7 @@ var express = require('express');
 var assert = require('assert');
 
 var passport = require('passport');
-var passStrategyBearer = require('passport-http-bearer').Strategy;
+var connectEnsureLogin =  require('connect-ensure-login')
 
 var session = require('express-session');
 var mongodbSessionStore = require('connect-mongodb-session')(session);
@@ -46,20 +46,6 @@ app.use(require('body-parser').urlencoded({ extended: true }));
 app.use(require("cors")())
 app.use("/mongodb/bower_components", express.static(__dirname + "/public/bower_components"))
 
-//==================================================================================================
-// Bearer Passport
-//==================================================================================================
-passport.use(new passStrategyBearer(function (token, cb) {
-    mongoClient.connect(mongodbUrl + "/auth", function (err, db) {
-        db.collection("users").findOne({ token: token }, function (err, user) {
-            if (err) return cb(err)
-            if (!user) { return cb(null, false); }
-            return cb(null, user);
-            db.close();
-        });
-    });
-}));
-
 // Configure Passport authenticated session persistence.
 //
 // In order to restore authentication state across HTTP requests, Passport needs
@@ -87,7 +73,7 @@ passport.deserializeUser(function (username, cb) {
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get('/mongodb', require('connect-ensure-login').ensureLoggedIn({ redirectTo: "/login?source=mongodb" }), function (req, res) {
+app.get('/mongodb',connectEnsureLogin.ensureLoggedIn({ redirectTo: "/login?source=mongodb" }), function (req, res) {
     if (req.user.username == "admin") res.sendFile(__dirname + '/public/index.html')
     else { req.logout(); res.send(403); }
 });
@@ -96,7 +82,7 @@ app.get('/mongodb', require('connect-ensure-login').ensureLoggedIn({ redirectTo:
 //==================================================================================================
 // API
 //==================================================================================================
-app.get("/mongodb/api", passport.authenticate('bearer', { session: false }), function (req, res) {
+app.get("/mongodb/api",connectEnsureLogin.ensureLoggedIn(), function (req, res) {
     mongoClient.connect(mongodbUrl + "/test", function (err, db) {
         var adminDb = db.admin();
         adminDb.listDatabases(function (err, dbs) {
@@ -107,7 +93,7 @@ app.get("/mongodb/api", passport.authenticate('bearer', { session: false }), fun
     })
 })
 
-app.get("/mongodb/api/:db", passport.authenticate('bearer', { session: false }), function (req, res) {
+app.get("/mongodb/api/:db", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
     mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
         db.listCollections().toArray(function (err, items) {
             if (req.user.username == "admin") res.send(items)
@@ -117,7 +103,7 @@ app.get("/mongodb/api/:db", passport.authenticate('bearer', { session: false }),
     })
 })
 
-app.get("/mongodb/api/:db/:col", passport.authenticate('bearer', { session: false }), function (req, res) {
+app.get("/mongodb/api/:db/:col", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
     req.query.users = req.user.username
     mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
         db.collection(req.params.col).find(req.query).toArray(function (err, docs) {
@@ -131,7 +117,7 @@ app.get("/mongodb/api/:db/:col", passport.authenticate('bearer', { session: fals
     });
 })
 
-app.post("/mongodb/api/:db/:col", passport.authenticate('bearer', { session: false }), function (req, res) {
+app.post("/mongodb/api/:db/:col", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
     if (req.body.users) { req.body.users.push(req.user.username) }
     else { req.body.users = [req.user.username] }
     if (req.body.owners) { req.body.owners.push(req.user.username) }
@@ -147,7 +133,7 @@ app.post("/mongodb/api/:db/:col", passport.authenticate('bearer', { session: fal
     });
 })
 
-app.get("/mongodb/api/:db/:col/:id", passport.authenticate('bearer', { session: false }), function (req, res) {
+app.get("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
     mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
         db.collection(req.params.col).findOne({ _id: mongoObjectId(req.params.id), users: req.user.username }, function (err, doc) {
             if (err) res.send({ error: err })
@@ -160,7 +146,7 @@ app.get("/mongodb/api/:db/:col/:id", passport.authenticate('bearer', { session: 
     });
 })
 
-app.put("/mongodb/api/:db/:col/:id", passport.authenticate('bearer', { session: false }), function (req, res) {
+app.put("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
     mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
         db.collection(req.params.col).updateOne({ _id: mongoObjectId(req.params.id), owners: req.user.username }, req.body, function (err, item) {
             if (err) res.send({ error: err })
@@ -170,7 +156,7 @@ app.put("/mongodb/api/:db/:col/:id", passport.authenticate('bearer', { session: 
     })
 })
 
-app.delete("/mongodb/api/:db/:col/:id", passport.authenticate('bearer', { session: false }), function (req, res) {
+app.delete("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
     mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
         db.collection(req.params.col).deleteOne({ _id: mongoObjectId(req.params.id), owners: req.user.username }, function (err, r) {
             if (err) res.send({ error: err })
