@@ -2,7 +2,7 @@ var express = require('express');
 var assert = require('assert');
 
 var passport = require('passport');
-var connectEnsureLogin =  require('connect-ensure-login')
+var connectEnsureLogin = require('connect-ensure-login')
 
 var session = require('express-session');
 var mongodbSessionStore = require('connect-mongodb-session')(session);
@@ -16,28 +16,28 @@ var mongodbUrl = "mongodb://127.0.0.1:27017"
 var app = express();
 
 var store = new mongodbSessionStore({
-    uri: mongodbUrl,
-    databaseName: 'auth',
-    collection: 'sessions'
+  uri: mongodbUrl,
+  databaseName: 'auth',
+  collection: 'sessions'
 });
 
 // Catch errors
 store.on('error', function (error) {
-    assert.ifError(error);
-    assert.ok(false);
+  assert.ifError(error);
+  assert.ok(false);
 });
 
 app.use(require('express-session')({
-    secret: 'This is a secret',
-    cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
-    },
-    store: store,
-    // Boilerplate options, see:
-    // * https://www.npmjs.com/package/express-session#resave
-    // * https://www.npmjs.com/package/express-session#saveuninitialized
-    resave: true,
-    saveUninitialized: true
+  secret: 'This is a secret',
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
+  },
+  store: store,
+  // Boilerplate options, see:
+  // * https://www.npmjs.com/package/express-session#resave
+  // * https://www.npmjs.com/package/express-session#saveuninitialized
+  resave: true,
+  saveUninitialized: true
 }));
 
 app.use(require('morgan')('tiny'));
@@ -54,18 +54,18 @@ app.use("/mongodb/bower_components", express.static(__dirname + "/public/bower_c
 // serializing, and querying the user record by ID from the database when
 // deserializing.
 passport.serializeUser(function (user, cb) {
-    cb(null, user.username);
+  cb(null, user.username);
 });
 
 passport.deserializeUser(function (username, cb) {
-    mongoClient.connect(mongodbUrl + "/auth", function (err, db) {
-        db.collection("users").findOne({ username: username }, function (err, user) {
-            if (err) return cb(err)
-            if (!user) { return cb(null, false); }
-            return cb(null, user);
-            db.close();
-        });
+  mongoClient.connect(mongodbUrl + "/auth", function (err, db) {
+    db.collection("users").findOne({ username: username }, function (err, user) {
+      if (err) return cb(err)
+      if (!user) { return cb(null, false); }
+      return cb(null, user);
+      db.close();
     });
+  });
 });
 
 // Initialize Passport and restore authentication state, if any, from the
@@ -73,100 +73,104 @@ passport.deserializeUser(function (username, cb) {
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get('/mongodb',connectEnsureLogin.ensureLoggedIn({ redirectTo: "/login?source=mongodb" }), function (req, res) {
-    if (req.user.username == "admin") res.sendFile(__dirname + '/public/index.html')
-    else { req.logout(); res.send(403); }
+app.get('/mongodb', connectEnsureLogin.ensureLoggedIn({ redirectTo: "/login?source=mongodb" }), function (req, res) {
+  if (req.user.username == "admin") res.sendFile(__dirname + '/public/index.html')
+  else { req.logout(); res.send(403); }
 });
 
 
 //==================================================================================================
 // API
 //==================================================================================================
-app.get("/mongodb/api",connectEnsureLogin.ensureLoggedIn(), function (req, res) {
-    mongoClient.connect(mongodbUrl + "/test", function (err, db) {
-        var adminDb = db.admin();
-        adminDb.listDatabases(function (err, dbs) {
-            if (req.user.username == "admin") res.send(dbs.databases)
-            else res.send([])
-            db.close()
-        })
+app.get("/mongodb/api", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
+  mongoClient.connect(mongodbUrl + "/test", function (err, db) {
+    var adminDb = db.admin();
+    adminDb.listDatabases(function (err, dbs) {
+      if (req.user.username == "admin") res.send(dbs.databases)
+      else res.send([])
+      db.close()
     })
+  })
 })
 
 app.get("/mongodb/api/:db", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
-    mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
-        db.listCollections().toArray(function (err, items) {
-            if (req.user.username == "admin") res.send(items)
-            else res.send([])
-            db.close()
-        })
+  mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
+    db.listCollections().toArray(function (err, items) {
+      if (req.user.username == "admin") res.send(items)
+      else res.send([])
+      db.close()
     })
+  })
 })
 
 app.get("/mongodb/api/:db/:col", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
-    req.query.users = req.user.username
-    mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
-        db.collection(req.params.col).find(req.query).toArray(function (err, docs) {
-            if (err) res.send({ error: err })
-            else {
-                docs.forEach(function (item) { item.id = item._id; delete item._id }, this);
-                res.send(docs)
-            }
-            db.close();
-        });
+  req.query.users = req.user.username
+  mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
+    db.collection(req.params.col).find(req.query).toArray(function (err, docs) {
+      if (err) res.send({ error: err })
+      res.send(docs)
+      db.close();
     });
+  });
 })
 
 app.post("/mongodb/api/:db/:col", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
-    if (req.body.users) { req.body.users.push(req.user.username) }
-    else { req.body.users = [req.user.username] }
-    if (req.body.owners) { req.body.owners.push(req.user.username) }
-    else { req.body.owners = [req.user.username] }
-    if (req.body.users.indexOf("admin") === -1) { req.body.users.push("admin") }
-    if (req.body.owners.indexOf("admin") === -1) { req.body.owners.push("admin") }
-    mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
-        db.collection(req.params.col).insertOne(req.body, function (err, r) {
-            if (err) res.send({ error: err })
-            else res.send(r)
-            db.close()
-        })
-    });
+  if (req.body.users) { req.body.users.push(req.user.username) }
+  else { req.body.users = [req.user.username] }
+  if (req.body.owners) { req.body.owners.push(req.user.username) }
+  else { req.body.owners = [req.user.username] }
+  if (req.body.users.indexOf("admin") === -1) { req.body.users.push("admin") }
+  if (req.body.owners.indexOf("admin") === -1) { req.body.owners.push("admin") }
+  mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
+    db.collection(req.params.col).insertOne(req.body, function (err, r) {
+      if (err) res.send({ error: err })
+      else res.send(r)
+      db.close()
+    })
+  });
 })
 
 app.get("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
-    mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
-        db.collection(req.params.col).findOne({ _id: mongoObjectId(req.params.id), users: req.user.username }, function (err, doc) {
-            if (err) res.send({ error: err })
-            else {
-                doc.id = doc._id; delete doc._id;
-                res.send(doc)
-            }
-            db.close();
-        });
+  var query = { users: req.user.username }
+  if (mongoObjectId.isValid(req.params.id)) query._id = mongoObjectId(req.params.id)
+  else query.id = req.params.id
+  mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
+    db.collection(req.params.col).findOne(query, function (err, doc) {
+      if (err) res.send({ error: err })
+      res.send(doc)
+      db.close();
     });
+  });
 })
 
 app.put("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
-    mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
-        db.collection(req.params.col).updateOne({ _id: mongoObjectId(req.params.id), owners: req.user.username }, req.body, function (err, item) {
-            if (err) res.send({ error: err })
-            else res.send(item)
-            db.close()
-        })
+  var query = { users: req.user.username }
+  if (mongoObjectId.isValid(req.params.id)) query._id = mongoObjectId(req.params.id)
+  else query.id = req.params.id
+  delete req.body._id
+  mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
+    db.collection(req.params.col).updateOne(query, req.body, function (err, item) {
+      if (err) res.send({ error: err })
+      else res.send(item)
+      db.close()
     })
+  })
 })
 
 app.delete("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
-    mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
-        db.collection(req.params.col).deleteOne({ _id: mongoObjectId(req.params.id), owners: req.user.username }, function (err, r) {
-            if (err) res.send({ error: err })
-            else res.send(r)
-            db.close()
-        })
+  var query = { users: req.user.username }
+  if (mongoObjectId.isValid(req.params.id)) query._id = mongoObjectId(req.params.id)
+  else query.id = req.params.id
+  mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
+    db.collection(req.params.col).deleteOne(query, function (err, r) {
+      if (err) res.send({ error: err })
+      else res.send(r)
+      db.close()
     })
+  })
 })
 
 
 app.listen(3005, function () {
-    console.log("Service 3005-mongodb running on http://127.0.0.1:3005")
+  console.log("Service 3005-mongodb running on http://127.0.0.1:3005")
 })
