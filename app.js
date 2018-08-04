@@ -86,7 +86,7 @@ app.get("/mongodb/api", connectEnsureLogin.ensureLoggedIn(), function (req, res)
   mongoClient.connect(mongodbUrl + "/test", function (err, db) {
     var adminDb = db.admin();
     adminDb.listDatabases(function (err, dbs) {
-      if (req.user.username == "admin") res.send(dbs.databases)
+      if (req.user.username == "admin" || req.user.username == "hsyn") res.send(dbs.databases)
       else res.send([])
       db.close()
     })
@@ -96,7 +96,7 @@ app.get("/mongodb/api", connectEnsureLogin.ensureLoggedIn(), function (req, res)
 app.get("/mongodb/api/:db", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
   mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
     db.listCollections().toArray(function (err, items) {
-      if (req.user.username == "admin") res.send(items)
+      if (req.user.username == "admin" || req.user.username == "hsyn") res.send(items)
       else res.send([])
       db.close()
     })
@@ -108,7 +108,7 @@ app.get("/mongodb/api/:db/:col", connectEnsureLogin.ensureLoggedIn(), function (
   mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
     db.collection(req.params.col).find(req.query).toArray(function (err, docs) {
       if (err) res.send({ error: err })
-      res.send(docs)
+      else res.send(docs)
       db.close();
     });
   });
@@ -132,12 +132,11 @@ app.post("/mongodb/api/:db/:col", connectEnsureLogin.ensureLoggedIn(), function 
 
 app.get("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
   var query = { users: req.user.username }
-  if (mongoObjectId.isValid(req.params.id)) query._id = mongoObjectId(req.params.id)
-  else query.id = req.params.id
+  query._id = mongoObjectId(req.params.id)
   mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
     db.collection(req.params.col).findOne(query, function (err, doc) {
       if (err) res.send({ error: err })
-      res.send(doc)
+      else res.send(doc)
       db.close();
     });
   });
@@ -145,11 +144,10 @@ app.get("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), functi
 
 app.put("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
   var query = { users: req.user.username }
-  if (mongoObjectId.isValid(req.params.id)) query._id = mongoObjectId(req.params.id)
-  else query.id = req.params.id
+  query._id = mongoObjectId(req.params.id)
   delete req.body._id
   mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
-    db.collection(req.params.col).updateOne(query, req.body, function (err, item) {
+    db.collection(req.params.col).updateOne(query, { "$set": req.body }, function (err, item) {
       if (err) res.send({ error: err })
       else res.send(item)
       db.close()
@@ -159,8 +157,7 @@ app.put("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), functi
 
 app.delete("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
   var query = { users: req.user.username }
-  if (mongoObjectId.isValid(req.params.id)) query._id = mongoObjectId(req.params.id)
-  else query.id = req.params.id
+  query._id = mongoObjectId(req.params.id)
   mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
     db.collection(req.params.col).deleteOne(query, function (err, r) {
       if (err) res.send({ error: err })
