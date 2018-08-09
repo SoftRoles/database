@@ -124,7 +124,7 @@ app.post("/mongodb/api/:db/:col", connectEnsureLogin.ensureLoggedIn(), function 
   mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
     db.collection(req.params.col).insertOne(req.body, function (err, r) {
       if (err) res.send({ error: err })
-      else res.send(r)
+      else res.send(Object.assign({}, r.result, { insertedId: r.insertedId }))
       db.close()
     })
   });
@@ -147,9 +147,9 @@ app.put("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), functi
   query._id = mongoObjectId(req.params.id)
   delete req.body._id
   mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
-    db.collection(req.params.col).updateOne(query, { "$set": req.body }, function (err, item) {
+    db.collection(req.params.col).updateOne(query, { "$set": req.body }, function (err, r) {
       if (err) res.send({ error: err })
-      else res.send(item)
+      else res.send(Object.assign({}, r.result))
       db.close()
     })
   })
@@ -161,7 +161,7 @@ app.delete("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), fun
   mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
     db.collection(req.params.col).deleteOne(query, function (err, r) {
       if (err) res.send({ error: err })
-      else res.send(r)
+      else res.send(Object.assign({}, r.result))
       db.close()
     })
   })
