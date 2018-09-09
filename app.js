@@ -143,7 +143,7 @@ app.get("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), functi
 })
 
 app.put("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
-  var query = { users: req.user.username }
+  var query = { owners: req.user.username }
   query._id = mongoObjectId(req.params.id)
   delete req.body._id
   mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
@@ -156,7 +156,7 @@ app.put("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), functi
 })
 
 app.delete("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
-  var query = { users: req.user.username }
+  var query = { owners: req.user.username }
   query._id = mongoObjectId(req.params.id)
   mongoClient.connect(mongodbUrl + "/" + req.params.db, function (err, db) {
     db.collection(req.params.col).deleteOne(query, function (err, r) {
