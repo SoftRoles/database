@@ -7,10 +7,14 @@ var connectEnsureLogin = require('connect-ensure-login')
 var session = require('express-session');
 var mongodbSessionStore = require('connect-mongodb-session')(session);
 
-// Module related packages
+var mongodb;
 var mongoClient = require("mongodb").MongoClient
 var mongoObjectId = require('mongodb').ObjectID;
 var mongodbUrl = "mongodb://127.0.0.1:27017"
+mongoClient.connect(mongodbUrl, { poolSize: 10 }, function (err, client) {
+  assert.equal(null, err);
+  mongodb = client;
+});
 
 // Create a new Express application.
 var app = express();
@@ -58,13 +62,10 @@ passport.serializeUser(function (user, cb) {
 });
 
 passport.deserializeUser(function (username, cb) {
-  mongoClient.connect(mongodbUrl, { useNewUrlParser: true }, function (err, client) {
-    client.db("auth").collection("users").findOne({ username: username }, function (err, user) {
-      if (err) return cb(err)
-      if (!user) { return cb(null, false); }
-      return cb(null, user);
-      client.close();
-    });
+  mongodb.db("auth").collection("users").findOne({ username: username }, function (err, user) {
+    if (err) return cb(err)
+    if (!user) { return cb(null, false); }
+    return cb(null, user);
   });
 });
 
@@ -83,34 +84,25 @@ app.get('/mongodb', connectEnsureLogin.ensureLoggedIn({ redirectTo: "/login?sour
 // API
 //==================================================================================================
 app.get("/mongodb/api", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
-  mongoClient.connect(mongodbUrl, { useNewUrlParser: true }, function (err, client) {
-    var adminDb = client.db("test").admin();
-    adminDb.listDatabases(function (err, dbs) {
-      if (req.user.username == "admin" || req.user.username == "hsyn") res.send(dbs.databases)
-      else res.send([])
-      client.close()
-    })
+  var adminDb = mongodb.db("test").admin();
+  adminDb.listDatabases(function (err, dbs) {
+    if (req.user.username == "admin" || req.user.username == "hsyn") res.send(dbs.databases)
+    else res.send([])
   })
 })
 
 app.get("/mongodb/api/:db", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
-  mongoClient.connect(mongodbUrl, { useNewUrlParser: true }, function (err, client) {
-    client.db(req.params.db).listCollections().toArray(function (err, items) {
-      if (req.user.username == "admin" || req.user.username == "hsyn") res.send(items)
-      else res.send([])
-      client.close()
-    })
+  mongodb.db(req.params.db).listCollections().toArray(function (err, items) {
+    if (req.user.username == "admin" || req.user.username == "hsyn") res.send(items)
+    else res.send([])
   })
 })
 
 app.get("/mongodb/api/:db/:col", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
   req.query.users = req.user.username
-  mongoClient.connect(mongodbUrl, { useNewUrlParser: true }, function (err, client) {
-    client.db(req.params.db).collection(req.params.col).find(req.query).toArray(function (err, docs) {
-      if (err) res.send({ error: err })
-      else res.send(docs)
-      client.close();
-    });
+  mongodb.db(req.params.db).collection(req.params.col).find(req.query).toArray(function (err, docs) {
+    if (err) res.send({ error: err })
+    else res.send(docs)
   });
 })
 
@@ -121,24 +113,18 @@ app.post("/mongodb/api/:db/:col", connectEnsureLogin.ensureLoggedIn(), function 
   else { req.body.owners = [req.user.username] }
   if (req.body.users.indexOf("admin") === -1) { req.body.users.push("admin") }
   if (req.body.owners.indexOf("admin") === -1) { req.body.owners.push("admin") }
-  mongoClient.connect(mongodbUrl, { useNewUrlParser: true }, function (err, client) {
-    client.db(req.params.db).collection(req.params.col).insertOne(req.body, function (err, r) {
-      if (err) res.send({ error: err })
-      else res.send(Object.assign({}, r.result, { insertedId: r.insertedId }))
-      client.close()
-    })
+  mongodb.db(req.params.db).collection(req.params.col).insertOne(req.body, function (err, r) {
+    if (err) res.send({ error: err })
+    else res.send(Object.assign({}, r.result, { insertedId: r.insertedId }))
   });
 })
 
 app.get("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
   var query = { users: req.user.username }
   query._id = mongoObjectId(req.params.id)
-  mongoClient.connect(mongodbUrl, { useNewUrlParser: true }, function (err, client) {
-    client.db(req.params.db).collection(req.params.col).findOne(query, function (err, doc) {
-      if (err) res.send({ error: err })
-      else res.send(doc)
-      client.close();
-    });
+  mongodb.db(req.params.db).collection(req.params.col).findOne(query, function (err, doc) {
+    if (err) res.send({ error: err })
+    else res.send(doc)
   });
 })
 
@@ -146,24 +132,18 @@ app.put("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), functi
   var query = { owners: req.user.username }
   query._id = mongoObjectId(req.params.id)
   delete req.body._id
-  mongoClient.connect(mongodbUrl, { useNewUrlParser: true }, function (err, client) {
-    client.db(req.params.db).collection(req.params.col).updateOne(query, { "$set": req.body }, function (err, r) {
-      if (err) res.send({ error: err })
-      else res.send(Object.assign({}, r.result))
-      client.close()
-    })
+  mongodb.db(req.params.db).collection(req.params.col).updateOne(query, { "$set": req.body }, function (err, r) {
+    if (err) res.send({ error: err })
+    else res.send(Object.assign({}, r.result))
   })
 })
 
 app.delete("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
   var query = { owners: req.user.username }
   query._id = mongoObjectId(req.params.id)
-  mongoClient.connect(mongodbUrl, { useNewUrlParser: true }, function (err, client) {
-    client.db(req.params.db).collection(req.params.col).deleteOne(query, function (err, r) {
-      if (err) res.send({ error: err })
-      else res.send(Object.assign({}, r.result))
-      client.close()
-    })
+  mongodb.db(req.params.db).collection(req.params.col).deleteOne(query, function (err, r) {
+    if (err) res.send({ error: err })
+    else res.send(Object.assign({}, r.result))
   })
 })
 
