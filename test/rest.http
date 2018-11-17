@@ -1,0 +1,4 @@
+##
+# List avaliable serialports
+http://127.0.0.1/mongodb/api
+Authorization: Bearer %Sdf1234
