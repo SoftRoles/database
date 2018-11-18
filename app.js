@@ -40,11 +40,6 @@ app.use(require('express-session')({
   saveUninitialized: true
 }));
 
-app.use(require('morgan')('tiny'));
-app.use(require('body-parser').json())
-app.use(require('body-parser').urlencoded({ extended: true }));
-app.use(require("cors")())
-app.use("/mongodb/bower_components", express.static(__dirname + "/public/bower_components"))
 
 passport.serializeUser(function (user, cb) {
   cb(null, user.username);
@@ -61,6 +56,11 @@ passport.deserializeUser(function (username, cb) {
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.use(require('morgan')('tiny'));
+app.use(require('body-parser').json())
+app.use(require('body-parser').urlencoded({ extended: true }));
+app.use(require("cors")())
+app.use("/mongodb/bower_components", express.static(__dirname + "/public/bower_components"))
 
 
 app.get('/mongodb', connectEnsureLogin.ensureLoggedIn({ redirectTo: "/login?source=mongodb" }), function (req, res) {
