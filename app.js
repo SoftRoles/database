@@ -1,4 +1,7 @@
 var express = require('express');
+var app = express();
+
+// session manangement
 var assert = require('assert');
 
 var passport = require('passport');
@@ -16,16 +19,12 @@ mongoClient.connect(mongodbUrl, { poolSize: 10 }, function (err, client) {
   mongodb = client;
 });
 
-// Create a new Express application.
-var app = express();
-
 var store = new mongodbSessionStore({
   uri: mongodbUrl,
   databaseName: 'auth',
   collection: 'sessions'
 });
 
-// Catch errors
 store.on('error', function (error) {
   assert.ifError(error);
   assert.ok(false);
@@ -37,9 +36,6 @@ app.use(require('express-session')({
     maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
   },
   store: store,
-  // Boilerplate options, see:
-  // * https://www.npmjs.com/package/express-session#resave
-  // * https://www.npmjs.com/package/express-session#saveuninitialized
   resave: true,
   saveUninitialized: true
 }));
@@ -50,13 +46,6 @@ app.use(require('body-parser').urlencoded({ extended: true }));
 app.use(require("cors")())
 app.use("/mongodb/bower_components", express.static(__dirname + "/public/bower_components"))
 
-// Configure Passport authenticated session persistence.
-//
-// In order to restore authentication state across HTTP requests, Passport needs
-// to serialize users into and deserialize users out of the session.  The
-// typical implementation of this is as simple as supplying the user ID when
-// serializing, and querying the user record by ID from the database when
-// deserializing.
 passport.serializeUser(function (user, cb) {
   cb(null, user.username);
 });
@@ -69,17 +58,15 @@ passport.deserializeUser(function (username, cb) {
   });
 });
 
-// Initialize Passport and restore authentication state, if any, from the
-// session.
 app.use(passport.initialize());
 app.use(passport.session());
+
+
 
 app.get('/mongodb', connectEnsureLogin.ensureLoggedIn({ redirectTo: "/login?source=mongodb" }), function (req, res) {
   if (req.user.username == "admin") res.sendFile(__dirname + '/public/index.html')
   else { req.logout(); res.send(403); }
 });
-
-
 //==================================================================================================
 // API
 //==================================================================================================
