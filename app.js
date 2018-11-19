@@ -1,18 +1,44 @@
 var express = require('express');
 var app = express();
 
-// session manangement
+//=========================================
+// authorization check
+//=========================================
+function ensureLoggedIn(options) {
+  if (typeof options == 'string') {
+    options = { redirectTo: options }
+  }
+  options = options || {};
+
+  var url = options.redirectTo || '/login';
+  var setReturnTo = (options.setReturnTo === undefined) ? true : options.setReturnTo;
+
+  return function (req, res, next) {
+    if ((req.ip.indexOf("127.0.0.1") === -1) && (!req.isAuthenticated || !req.isAuthenticated())) {
+      if (setReturnTo && req.session) {
+        req.session.returnTo = req.originalUrl || req.url;
+      }
+      return res.redirect(url);
+    }
+    else{
+      req.user = req.user || {username:"local"}
+      next()
+    }
+  }
+}
+
+//=========================================
+// session
+//=========================================
 var assert = require('assert');
 
 var passport = require('passport');
-var connectEnsureLogin = require('connect-ensure-login')
 
 var session = require('express-session');
 var mongodbSessionStore = require('connect-mongodb-session')(session);
 
 var mongodb;
 var mongoClient = require("mongodb").MongoClient
-var mongoObjectId = require('mongodb').ObjectID;
 var mongodbUrl = "mongodb://127.0.0.1:27017"
 mongoClient.connect(mongodbUrl, { poolSize: 10 }, function (err, client) {
   assert.equal(null, err);
@@ -56,36 +82,39 @@ passport.deserializeUser(function (username, cb) {
 app.use(passport.initialize());
 app.use(passport.session());
 
+
 app.use(require('morgan')('tiny'));
 app.use(require('body-parser').json())
 app.use(require('body-parser').urlencoded({ extended: true }));
 app.use(require("cors")())
+
+
+
 app.use("/mongodb/bower_components", express.static(__dirname + "/public/bower_components"))
-
-
-app.get('/mongodb', connectEnsureLogin.ensureLoggedIn({ redirectTo: "/login?source=mongodb" }), function (req, res) {
+app.get('/mongodb', ensureLoggedIn({ redirectTo: "/login?source=mongodb" }), function (req, res) {
   if (req.user.username == "admin") res.sendFile(__dirname + '/public/index.html')
   else { req.logout(); res.send(403); }
 });
 //==================================================================================================
 // API
 //==================================================================================================
-app.get("/mongodb/api", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
+var mongoObjectId = require('mongodb').ObjectID;
+app.get("/mongodb/api", ensureLoggedIn(), function (req, res) {
   var adminDb = mongodb.db("test").admin();
   adminDb.listDatabases(function (err, dbs) {
     if (req.user.username == "admin" || req.user.username == "hsyn") res.send(dbs.databases)
-    else res.send([])
+    else res.sendStatus(403)
   })
 })
 
-app.get("/mongodb/api/:db", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
+app.get("/mongodb/api/:db", ensureLoggedIn(), function (req, res) {
   mongodb.db(req.params.db).listCollections().toArray(function (err, items) {
     if (req.user.username == "admin" || req.user.username == "hsyn") res.send(items)
-    else res.send([])
+    else res.sendStatus(403)
   })
 })
 
-app.get("/mongodb/api/:db/:col", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
+app.get("/mongodb/api/:db/:col", ensureLoggedIn(), function (req, res) {
   req.query.users = req.user.username
   mongodb.db(req.params.db).collection(req.params.col).find(req.query).toArray(function (err, docs) {
     if (err) res.send({ error: err })
@@ -93,7 +122,7 @@ app.get("/mongodb/api/:db/:col", connectEnsureLogin.ensureLoggedIn(), function (
   });
 })
 
-app.post("/mongodb/api/:db/:col", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
+app.post("/mongodb/api/:db/:col", ensureLoggedIn(), function (req, res) {
   if (req.body.users) { req.body.users.push(req.user.username) }
   else { req.body.users = [req.user.username] }
   if (req.body.owners) { req.body.owners.push(req.user.username) }
@@ -106,7 +135,7 @@ app.post("/mongodb/api/:db/:col", connectEnsureLogin.ensureLoggedIn(), function 
   });
 })
 
-app.get("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
+app.get("/mongodb/api/:db/:col/:id", ensureLoggedIn(), function (req, res) {
   var query = { users: req.user.username }
   query._id = mongoObjectId(req.params.id)
   mongodb.db(req.params.db).collection(req.params.col).findOne(query, function (err, doc) {
@@ -115,7 +144,7 @@ app.get("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), functi
   });
 })
 
-app.put("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
+app.put("/mongodb/api/:db/:col/:id", ensureLoggedIn(), function (req, res) {
   var query = { owners: req.user.username }
   query._id = mongoObjectId(req.params.id)
   delete req.body._id
@@ -125,7 +154,7 @@ app.put("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), functi
   })
 })
 
-app.delete("/mongodb/api/:db/:col/:id", connectEnsureLogin.ensureLoggedIn(), function (req, res) {
+app.delete("/mongodb/api/:db/:col/:id", ensureLoggedIn(), function (req, res) {
   var query = { owners: req.user.username }
   query._id = mongoObjectId(req.params.id)
   mongodb.db(req.params.db).collection(req.params.col).deleteOne(query, function (err, r) {
