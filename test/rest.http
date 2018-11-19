@@ -1,4 +1,11 @@
-##
-# List avaliable serialports
+###
+# list databases
 http://127.0.0.1/mongodb/api
-Authorization: Bearer %Sdf1234
+
+###
+# list database collections
+http://127.0.0.1/mongodb/api/auth
+
+###
+# list collection items
+http://127.0.0.1/mongodb/api/auth/users
