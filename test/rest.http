@@ -1,10 +1,12 @@
 ###
-# list databases
+# list databases (as admin)
 http://127.0.0.1/mongodb/api
+Authorization: Bearer xxx
 
 ###
-# list database collections
+# list database collections (as admin)
 http://127.0.0.1/mongodb/api/auth
+Authorization: Bearer xxx
 
 ###
 # list collection items
