@@ -92,7 +92,7 @@ app.use(require("cors")())
 
 app.use("/mongodb/bower_components", express.static(__dirname + "/public/bower_components"))
 app.get('/mongodb', ensureLoggedIn({ redirectTo: "/login?source=mongodb" }), function (req, res) {
-  if (["admin", "hsyn", "local"].indexOf(req.user.username) > -1) res.sendFile(__dirname + '/public/index.html')
+  if (["admin", "hsyn"].indexOf(req.user.username) > -1) res.sendFile(__dirname + '/public/index.html')
   else { req.logout(); res.send(403); }
 });
 //==================================================================================================
@@ -102,14 +102,14 @@ var mongoObjectId = require('mongodb').ObjectID;
 app.get("/mongodb/api", ensureLoggedIn(), function (req, res) {
   var adminDb = mongodb.db("test").admin();
   adminDb.listDatabases(function (err, dbs) {
-    if (["admin", "hsyn", "local"].indexOf(req.user.username) > -1) res.send(dbs.databases)
+    if (["admin", "hsyn"].indexOf(req.user.username) > -1) res.send(dbs.databases)
     else res.sendStatus(403)
   })
 })
 
 app.get("/mongodb/api/:db", ensureLoggedIn(), function (req, res) {
   mongodb.db(req.params.db).listCollections().toArray(function (err, items) {
-    if (["admin", "hsyn", "local"].indexOf(req.user.username) > -1) res.send(items)
+    if (["admin", "hsyn"].indexOf(req.user.username) > -1) res.send(items)
     else res.sendStatus(403)
   })
 })
