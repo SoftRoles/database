@@ -1,8 +1,8 @@
 {
-  "name": "www",
+  "name": "database",
   "version": "1.0.0",
   "description": "",
-  "main": "index.html",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,16 +10,12 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.17.2",
-    "connect-ensure-login": "^0.1.1",
     "connect-mongodb-session": "^2.0.2",
-    "cookie-parser": "^1.4.3",
     "cors": "^2.8.4",
     "express": "^4.15.4",
     "express-session": "^1.15.6",
     "mongodb": "^3.1.10",
     "morgan": "^1.9.0",
     "passport": "^0.4.0",
-    "passport-custom": "^1.0.5",
-    "passport-local": "^1.0.0"
   }
 }
