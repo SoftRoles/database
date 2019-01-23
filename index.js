@@ -1,9 +1,12 @@
+//=============================================================================
+// http server
+//=============================================================================
 var express = require('express');
 var app = express();
 
-//=========================================
-// authorization check
-//=========================================
+//-------------------------------------
+// common middlewares
+//-------------------------------------
 app.use(require("@softroles/authorize-local-user")())
 app.use(require('morgan')('tiny'));
 app.use(require('body-parser').json())
@@ -12,11 +15,13 @@ app.use(require("cors")())
 
 app.get("/database/api", function (req, res) {
   console.log(req.user)
-  res.send(req.session)
+  res.send(req.user)
 })
-//==================================================================================================
-// API
-//==================================================================================================
+
+
+//=============================================================================
+// api
+//=============================================================================
 var mongoObjectId = require('mongodb').ObjectID;
 app.get("/mongodb/api", function (req, res) {
   var adminDb = mongodb.db("test").admin();
@@ -83,6 +88,27 @@ app.delete("/mongodb/api/:db/:col/:id", function (req, res) {
 })
 
 
-app.listen(3005, function () {
-  console.log("Service 3005-mongodb running on http://127.0.0.1:3005")
+//=============================================================================
+// start and register service
+//=============================================================================
+var path = require('path')
+var findFreePort = require('find-free-port')
+var userEnvVariable = require('@softroles/user-env-variable')
+var assert = require('assert')
+var serviceName = path.basename(__dirname).toUpperCase()
+findFreePort(3000, function (err, port) {
+  assert.equal(err, null, 'Could not find a free tcp port.')
+  app.listen(Number(port), function () {
+    var registers = {
+      ['SOFTROLES_SERVICE_' + serviceName + '_PORT']: port
+    }
+    console.log("Service is registered with following variables:")
+    for (reg in registers) {
+      console.log('\t - SOFTROLES_SERVICE_' + serviceName + '_PORT', '=', port)
+      userEnvVariable.set('SOFTROLES_SERVICE_' + serviceName + '_PORT', port, function (err) {
+        assert.equal(err, null, 'Could not register service.')
+        console.log("Service running on http://127.0.0.1:" + port)
+      })
+    }
+  })
 })
