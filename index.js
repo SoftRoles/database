@@ -22,6 +22,20 @@ app.get("/database/api", function (req, res) {
 //=============================================================================
 // api
 //=============================================================================
+
+//-------------------------------------
+// mongodb
+//-------------------------------------
+var assert = require('assert');
+var mongodb;
+var mongoClient = require("mongodb").MongoClient
+var mongodbUrl = "mongodb://127.0.0.1:27017"
+mongoClient.connect(mongodbUrl, { poolSize: 10, useNewUrlParser: true }, function (err, client) {
+  assert.equal(null, err);
+  mongodb = client;
+});
+
+
 var mongoObjectId = require('mongodb').ObjectID;
 app.get("/mongodb/api", function (req, res) {
   var adminDb = mongodb.db("test").admin();
