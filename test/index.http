@@ -1,2 +1,44 @@
-##
+## List databases
 GET http://127.0.0.1:3000/database/api
+
+###
+
+## List database collections
+GET http://127.0.0.1:3000/database/api/auth
+
+###
+
+## List collection items
+# GET http://127.0.0.1:3000/database/api/auth/users?username=guest
+GET http://127.0.0.1:3000/database/api/test/test1
+
+###
+
+## Insert item
+POST http://127.0.0.1:3000/database/api/test/test1
+Content-Type: application/json
+
+{
+    "name": "sample",
+    "time": "Wed, 21 Oct 2015 18:27:50 GMT"
+}
+
+###
+
+## Get item by id
+GET http://127.0.0.1:3000/database/api/test/test1/5c49665d1ef598172432100a
+
+###
+
+## Update item by id
+PUT http://127.0.0.1:3000/database/api/test/test1/5c49665d1ef598172432100a
+Content-Type: application/json
+
+{
+  "name": "newName"
+}
+
+###
+
+## Delete item by id
+DELETE http://127.0.0.1:3000/database/api/test/test1/5c49665d1ef598172432100a
