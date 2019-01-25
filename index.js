@@ -3,9 +3,18 @@
 //=============================================================================
 const express = require('express');
 const assert = require('assert');
-const path = require('path')
-const findFreePort = require('find-free-port')
-const userEnvVariable = require('@softroles/user-env-variable')
+const argparse = require('argparse').ArgumentParser
+
+//-------------------------------------
+// arguments
+//-------------------------------------
+const argParser = new argparse({
+  version: '1.1.0',
+  addHelp: true,
+  description: 'Database service'
+})
+argParser.addArgument(['-p', '--port'], { help: 'Listening port', defaultValue: '3005' })
+const args = argParser.parseArgs()
 
 //-------------------------------------
 // mongodb
@@ -108,22 +117,8 @@ app.delete("/database/api/v1/:db/:col/:id", function (req, res) {
 
 
 //=============================================================================
-// start and register service
+// start service
 //=============================================================================
-const serviceName = path.basename(__dirname).toUpperCase()
-findFreePort(3000, function (err, port) {
-  assert.equal(err, null, 'Could not find a free tcp port.')
-  app.listen(Number(port), function () {
-    var registers = {
-      ['SOFTROLES_SERVICE_' + serviceName + '_PORT']: port
-    }
-    console.log("Service is registered with following variables:")
-    for (reg in registers) {
-      console.log('\t - SOFTROLES_SERVICE_' + serviceName + '_PORT', '=', port)
-      userEnvVariable.set('SOFTROLES_SERVICE_' + serviceName + '_PORT', port, function (err) {
-        assert.equal(err, null, 'Could not register service.')
-        console.log("Service running on http://127.0.0.1:" + port)
-      })
-    }
-  })
+app.listen(Number(args.port), function () {
+  console.log(`Service running on http://127.0.0.1:${args.port}`)
 })

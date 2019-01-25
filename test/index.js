@@ -1,6 +1,6 @@
 const request = require('request')
 
-const api = 'http://127.0.0.1:3000/database/api/v1'
+const api = 'http://127.0.0.1:3005/database/api/v1'
 
 // List databases
 request.get(api, function (err, res, body) {

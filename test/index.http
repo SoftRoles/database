@@ -1,21 +1,21 @@
 ## List databases
-GET http://127.0.0.1:3000/database/api
+GET http://127.0.0.1:3005/database/api
 
 ###
 
 ## List database collections
-GET http://127.0.0.1:3000/database/api/auth
+GET http://127.0.0.1:3005/database/api/auth
 
 ###
 
 ## List collection items
-# GET http://127.0.0.1:3000/database/api/auth/users?username=guest
-GET http://127.0.0.1:3000/database/api/test/test1
+# GET http://127.0.0.1:3005/database/api/auth/users?username=guest
+GET http://127.0.0.1:3005/database/api/test/test1
 
 ###
 
 ## Insert item
-POST http://127.0.0.1:3000/database/api/test/test1
+POST http://127.0.0.1:3005/database/api/test/test1
 Content-Type: application/json
 
 {
@@ -26,12 +26,12 @@ Content-Type: application/json
 ###
 
 ## Get item by id
-GET http://127.0.0.1:3000/database/api/test/test1/5c49665d1ef598172432100a
+GET http://127.0.0.1:3005/database/api/test/test1/5c49665d1ef598172432100a
 
 ###
 
 ## Update item by id
-PUT http://127.0.0.1:3000/database/api/test/test1/5c49665d1ef598172432100a
+PUT http://127.0.0.1:3005/database/api/test/test1/5c49665d1ef598172432100a
 Content-Type: application/json
 
 {
@@ -41,4 +41,4 @@ Content-Type: application/json
 ###
 
 ## Delete item by id
-DELETE http://127.0.0.1:3000/database/api/test/test1/5c49665d1ef598172432100a
+DELETE http://127.0.0.1:3005/database/api/test/test1/5c49665d1ef598172432100a
