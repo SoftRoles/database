@@ -10,7 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "@softroles/authorize-local-user": "^1.2.0",
-    "@softroles/user-env-variable": "^1.1.0",
     "argparse": "^1.0.10",
     "body-parser": "^1.17.2",
     "cors": "^2.8.4",
