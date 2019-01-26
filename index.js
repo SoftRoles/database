@@ -9,7 +9,6 @@ const argparse = require('argparse').ArgumentParser
 // arguments
 //-------------------------------------
 const argParser = new argparse({
-  version: '1.1.0',
   addHelp: true,
   description: 'Database service'
 })
