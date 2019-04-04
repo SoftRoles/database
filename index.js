@@ -88,6 +88,7 @@ app.use(require('@softroles/authorize-bearer-token')(function (token, cb) {
   });
 }))
 
+app.use(require('@softroles/authorize-guest')())
 //-------------------------------------
 // common middlewares
 //-------------------------------------
@@ -123,6 +124,7 @@ app.get("/database/api/v1/:db", function (req, res) {
 
 app.get("/database/api/v1/:db/:col", function (req, res) {
   req.query.users = req.user.username
+  //console.log(req.query)
   mongodb.db(req.params.db).collection(req.params.col).find(req.query).toArray(function (err, docs) {
     if (err) res.send({ error: err })
     else res.send(docs)
