@@ -114,7 +114,7 @@ app.get("/database/api/v1", function (req, res) {
 })
 
 app.get("/database/api/v1/:db", function (req, res) {
-  if (req.user && req.user.username == 'admin') {
+  if (true/*req.user && req.user.username == 'admin'*/) {
     mongodb.db(req.params.db).listCollections().toArray(function (err, colls) {
       if (err) { console.err(err); res.send({ error: err }) }
       else res.send(colls)
@@ -124,7 +124,7 @@ app.get("/database/api/v1/:db", function (req, res) {
 })
 
 app.get("/database/api/v1/:db/:col", function (req, res) {
-  req.query.users = req.user.username
+  //req.query.users = req.user.username
   //console.log(req.query)
   mongodb.db(req.params.db).collection(req.params.col).find(req.query).toArray(function (err, docs) {
     if (err) res.send({ error: err })
@@ -133,12 +133,12 @@ app.get("/database/api/v1/:db/:col", function (req, res) {
 })
 
 app.post("/database/api/v1/:db/:col", function (req, res) {
-  if (req.body.users) { req.body.users.push(req.user.username) }
-  else { req.body.users = [req.user.username] }
-  if (req.body.owners) { req.body.owners.push(req.user.username) }
-  else { req.body.owners = [req.user.username] }
-  if (req.body.users.indexOf("admin") === -1) { req.body.users.push("admin") }
-  if (req.body.owners.indexOf("admin") === -1) { req.body.owners.push("admin") }
+  //if (req.body.users) { req.body.users.push(req.user.username) }
+  //else { req.body.users = [req.user.username] }
+  //if (req.body.owners) { req.body.owners.push(req.user.username) }
+  //else { req.body.owners = [req.user.username] }
+  //if (req.body.users.indexOf("admin") === -1) { req.body.users.push("admin") }
+  //if (req.body.owners.indexOf("admin") === -1) { req.body.owners.push("admin") }
   mongodb.db(req.params.db).collection(req.params.col).insertOne(req.body, function (err, r) {
     if (err) res.send({ error: err })
     else res.send(Object.assign({}, r.result, { insertedId: r.insertedId }))
@@ -146,7 +146,7 @@ app.post("/database/api/v1/:db/:col", function (req, res) {
 })
 
 app.get("/database/api/v1/:db/:col/:id", function (req, res) {
-  var query = { users: req.user.username }
+  var query = {}//{ users: req.user.username }
   query._id = mongoObjectId(req.params.id)
   mongodb.db(req.params.db).collection(req.params.col).findOne(query, function (err, doc) {
     if (err) res.send({ error: err })
@@ -155,7 +155,7 @@ app.get("/database/api/v1/:db/:col/:id", function (req, res) {
 })
 
 app.put("/database/api/v1/:db/:col/:id", function (req, res) {
-  var query = { owners: req.user.username }
+  var query = {}//{ owners: req.user.username }
   query._id = mongoObjectId(req.params.id)
   delete req.body._id
   mongodb.db(req.params.db).collection(req.params.col).updateOne(query, { "$set": req.body }, function (err, r) {
@@ -165,7 +165,7 @@ app.put("/database/api/v1/:db/:col/:id", function (req, res) {
 })
 
 app.delete("/database/api/v1/:db/:col/:id", function (req, res) {
-  var query = { owners: req.user.username }
+  var query = {}//{ owners: req.user.username }
   query._id = mongoObjectId(req.params.id)
   mongodb.db(req.params.db).collection(req.params.col).deleteOne(query, function (err, r) {
     if (err) res.send({ error: err })
