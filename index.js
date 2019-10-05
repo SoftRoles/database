@@ -1,3 +1,5 @@
+#!/usr/bin/node
+
 //=============================================================================
 // modules
 //=============================================================================
@@ -37,63 +39,8 @@ mongoClient.connect(mongodbUrl, { poolSize: 10, useNewUrlParser: true }, functio
 const app = express();
 
 //-------------------------------------
-// session store
-//-------------------------------------
-var store = new mongodbSessionStore({
-  uri: mongodbUrl,
-  databaseName: 'auth',
-  collection: 'sessions'
-});
-
-// Catch errors
-store.on('error', function (error) {
-  assert.ifError(error);
-  assert.ok(false);
-});
-
-var sessionOptions = {
-  secret: 'This is a secret',
-  cookie: {
-    maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
-  },
-  store: store,
-  resave: true,
-  saveUninitialized: true
-}
-
-app.use(session(sessionOptions));
-
-//-------------------------------------
-// authentication
-//-------------------------------------
-passport.serializeUser(function (user, cb) {
-  cb(null, user.username);
-});
-
-passport.deserializeUser(function (username, cb) {
-  mongodb.db("auth").collection("users").findOne({ username: username }, function (err, user) {
-    if (err) return cb(err)
-    if (!user) { return cb(null, false); }
-    return cb(null, user);
-  });
-});
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-app.use(require('@softroles/authorize-bearer-token')(function (token, cb) {
-  mongodb.db("auth").collection("users").findOne({ token: token }, function (err, user) {
-    if (err) return cb(err)
-    if (!user) { return cb(null, false); }
-    return cb(null, user);
-  });
-}))
-
-app.use(require('@softroles/authorize-guest')())
-//-------------------------------------
 // common middlewares
 //-------------------------------------
-app.use(noCache())
 app.use(require('morgan')('tiny'));
 app.use(require('body-parser').json())
 app.use(require('body-parser').urlencoded({ extended: true }));
@@ -102,9 +49,9 @@ app.use(require("cors")())
 //=============================================================================
 // api v1
 //=============================================================================
-app.get("/database/api/v1", function (req, res) {
+app.get("/old/database/api/v1", function (req, res) {
   var adminDb = mongodb.db("test").admin();
-  if (req.user && req.user.username == 'admin') {
+  if (true/*req.user && req.user.username == 'admin'*/) {
     adminDb.listDatabases(function (err, dbs) {
       if (err) { console.err(err); res.send({ error: err }) }
       else res.send(dbs.databases)
@@ -113,7 +60,7 @@ app.get("/database/api/v1", function (req, res) {
   else res.sendStatus(401)
 })
 
-app.get("/database/api/v1/:db", function (req, res) {
+app.get("/old/database/api/v1/:db", function (req, res) {
   if (true/*req.user && req.user.username == 'admin'*/) {
     mongodb.db(req.params.db).listCollections().toArray(function (err, colls) {
       if (err) { console.err(err); res.send({ error: err }) }
@@ -123,7 +70,7 @@ app.get("/database/api/v1/:db", function (req, res) {
   else res.sendStatus(401)
 })
 
-app.get("/database/api/v1/:db/:col", function (req, res) {
+app.get("/old/database/api/v1/:db/:col", function (req, res) {
   //req.query.users = req.user.username
   //console.log(req.query)
   mongodb.db(req.params.db).collection(req.params.col).find(req.query).toArray(function (err, docs) {
@@ -132,7 +79,7 @@ app.get("/database/api/v1/:db/:col", function (req, res) {
   });
 })
 
-app.post("/database/api/v1/:db/:col", function (req, res) {
+app.post("/old/database/api/v1/:db/:col", function (req, res) {
   //if (req.body.users) { req.body.users.push(req.user.username) }
   //else { req.body.users = [req.user.username] }
   //if (req.body.owners) { req.body.owners.push(req.user.username) }
@@ -145,7 +92,7 @@ app.post("/database/api/v1/:db/:col", function (req, res) {
   });
 })
 
-app.get("/database/api/v1/:db/:col/:id", function (req, res) {
+app.get("/old/database/api/v1/:db/:col/:id", function (req, res) {
   var query = {}//{ users: req.user.username }
   query._id = mongoObjectId(req.params.id)
   mongodb.db(req.params.db).collection(req.params.col).findOne(query, function (err, doc) {
@@ -154,7 +101,7 @@ app.get("/database/api/v1/:db/:col/:id", function (req, res) {
   });
 })
 
-app.put("/database/api/v1/:db/:col/:id", function (req, res) {
+app.put("/old/database/api/v1/:db/:col/:id", function (req, res) {
   var query = {}//{ owners: req.user.username }
   query._id = mongoObjectId(req.params.id)
   delete req.body._id
@@ -164,7 +111,7 @@ app.put("/database/api/v1/:db/:col/:id", function (req, res) {
   })
 })
 
-app.delete("/database/api/v1/:db/:col/:id", function (req, res) {
+app.delete("/old/database/api/v1/:db/:col/:id", function (req, res) {
   var query = {}//{ owners: req.user.username }
   query._id = mongoObjectId(req.params.id)
   mongodb.db(req.params.db).collection(req.params.col).deleteOne(query, function (err, r) {
